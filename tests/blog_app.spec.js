@@ -120,6 +120,39 @@ describe('Blog app', () => {
       await blogDiv.getByRole('button', { name: 'view'}).click()
       await expect(blogDiv.getByRole('button', { name: 'Delete Post'})).not.toBeVisible()
     })
+
+    test('blogs are arranged according to likes', async({page}) => {
+        const blog1 = {
+          title: 'blog 1 title',
+          author: 'test',
+          url: '/blog-1'
+        }
+        const blog2 = {
+          title: 'blog 2 title',
+          author: 'test',
+          url: '/blog-2'
+        }
+        await createBlog(page, blog1.title, blog1.author, blog1.url)
+        await createBlog(page, blog2.title, blog2.author, blog2.url)
+
+      const blog1Div = page.getByRole('heading', { name: 'blog 1 title' }).locator('..')
+
+      const blog2Div = page.getByRole('heading', { name: 'blog 2 title' }).locator('..')
+      await blog2Div.getByRole('button', { name: 'view'}).click()
+      await blog2Div.getByRole('button', {name: 'Like'}).click()
+      await expect(blog2Div).toContainText('1Like')
+      await blog2Div.getByRole('button', { name: 'Cancel'}).click()
+
+      const blog2ViewBtnDiv =  blog2Div.getByRole('button', { name: 'view'}).locator('..')
+      const firstViewDiv = page.locator('div').filter({ hasText: /^view$/ }).nth(1)
+
+      // check that blog2's view button is now the nth(1) button with the text view instead of nth(3)
+      const isSame = await page.evaluate(([node1, node2]) => node1 === node2, [
+        await blog2ViewBtnDiv.elementHandle(),
+        await firstViewDiv.elementHandle()
+      ]);
+      expect(isSame).toBe(true)
+    })
   })
 
 
