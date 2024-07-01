@@ -7,11 +7,18 @@ describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
     // empty testing db
     await request.post('/api/testing/reset')
-    // create new user
+    // create new user1
     await request.post('/api/users', {
       data: {
         name: 'Mostafa Lotfy',
         username: 'mstflotfy',
+        password: '123'
+      }
+    })
+    await request.post('/api/users', {
+      data: {
+        name: 'someone else',
+        username: 'user2',
         password: '123'
       }
     })
@@ -100,6 +107,18 @@ describe('Blog app', () => {
 
         await expect(page.getByText(`Deleted ${blog.title}`)).toBeVisible()
         await expect(blogDiv).not.toBeVisible()
+    })
+
+    test('only owner can see blog del button', async ({ page }) => {
+      await page.getByRole('button', { name: 'Log Out' }).click()
+      await loginWith(page, 'user2', '123')
+      await createBlog(page, 'blog post created by user2', 'user 2', '/blog-user-2')
+      await page.getByRole('button', { name: 'Log Out' }).click()
+      await loginWith(page, 'mstflotfy', '123')
+
+      const blogDiv = page.getByRole('heading', { name: 'blog post created by user2' }).locator('..')
+      await blogDiv.getByRole('button', { name: 'view'}).click()
+      await expect(blogDiv.getByRole('button', { name: 'Delete Post'})).not.toBeVisible()
     })
   })
 
