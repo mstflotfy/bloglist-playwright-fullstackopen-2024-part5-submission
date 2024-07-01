@@ -77,13 +77,31 @@ describe('Blog app', () => {
 
       const likes = blogDiv.getByText('Likes: ')
       await blogDiv.getByRole('button', {name: 'Like'}).click()
-      await expect(likes).toContainText('1', { timeout: 4000})
+      await expect(likes).toContainText('1')
       expect (await likes.evaluate(node => node.textContent)).toBe('Likes: 1Like')
 
       await blogDiv.getByRole('button', {name: 'Like'}).click()
-      await expect(likes).toContainText('2', { timeout: 4000})
+      await expect(likes).toContainText('2')
       expect (await likes.evaluate(node => node.textContent)).toBe('Likes: 2Like')
     })
+
+    test('ownwer can delete a blog', async ({ page }) => {
+        const blog = {
+          title: 'another blog by playwright 3',
+          author: 'test author 2',
+          url: '/blog-3'
+        }
+        await createBlog(page, blog.title, blog.author, blog.url)
+        const blogDiv = page.getByRole('heading', { name: blog.title }).locator('..')
+        await blogDiv.getByRole('button', { name: 'view'}).click()
+
+        page.on('dialog', dialog => dialog.accept())
+        await blogDiv.getByRole('button', { name: 'Delete Post'}).click()
+
+        await expect(page.getByText(`Deleted ${blog.title}`)).toBeVisible()
+        await expect(blogDiv).not.toBeVisible()
+    })
   })
+
 
 })
